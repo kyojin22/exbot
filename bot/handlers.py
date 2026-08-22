@@ -28,15 +28,24 @@ PARSE_ERROR_TEXT = (
     "Send /help to see everything I understand."
 )
 
-START_TEXT = (
-    "👋 Hi! Send me an expense like:\n"
-    "  50000 lunch\n"
-    "  20 usd taxi to airport\n\n"
-    "I'll default to UZS if you don't give a currency, and auto-detect a "
-    "category unless you tag one with #category.\n\n"
-    "Send /help for the full guide, including every command and everything "
-    "I understand in a message."
-)
+def _build_welcome_text(first_name: str | None) -> str:
+    greeting = f"👋 Hi {first_name}!" if first_name else "👋 Hi!"
+    return (
+        f"{greeting} I'm your expense tracker.\n\n"
+        "Just send me a message like:\n"
+        "  50000 lunch\n"
+        "  20 usd taxi to airport\n\n"
+        f"I'll default to {currencies.DEFAULT_CURRENCY} if you skip the currency, "
+        "and auto-detect a category unless you tag one with #category.\n\n"
+        "Commands:\n"
+        "/today — today's total\n"
+        "/week — this week's total\n"
+        "/month — this month's total, by category\n"
+        "/undo — delete the last entry\n"
+        "/export — download all expenses as CSV\n"
+        "/help — full guide: every format, currency, and category keyword\n\n"
+        "🔒 Your expenses are private to you — no one else using this bot can see them."
+    )
 
 NOT_ALLOWED_TEXT = "🚫 Sorry, this bot is private and you're not on the allow-list."
 
@@ -122,7 +131,8 @@ def _display_note(note: str) -> str:
 
 @restricted
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(START_TEXT)
+    first_name = update.effective_user.first_name if update.effective_user else None
+    await update.message.reply_text(_build_welcome_text(first_name))
 
 
 @restricted

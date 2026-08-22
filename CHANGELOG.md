@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-22 (3) — Claude Code
+
+Personalized the `/start` welcome message; confirmed multi-user (family) support needs no code changes.
+
+- `/start` now builds its reply dynamically (`_build_welcome_text` in `bot/handlers.py`) — greets the user by their Telegram first name, lists all commands inline (not just a pointer to `/help`), and states that expense data is private per chat_id.
+- No DB/handler changes were needed for multiple family members: every query in `bot/db.py` is already scoped by `chat_id`, so each person who DMs the bot privately already gets fully isolated `/today` `/week` `/month` `/undo` `/export` and history. Adding a family member is just appending their chat ID to the comma-separated `ALLOWED_CHAT_IDS` in `.env` and restarting.
+
 ## 2026-08-22 (2) — Claude Code
 
 Fixed a startup crash and added a `/help` command.
