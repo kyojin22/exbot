@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-12 — Claude Code
+
+Added English/Turkish multi-language support per the feature spec.
+
+- Added `bot/i18n.py` — `STRINGS` dict (en/tr) covering every bot-facing message (welcome, help, expense-logged, summaries, undo, export, not-allowed, language picker), and `t(key, lang, **kwargs)` with fallback to English then to the raw key.
+- Reworked `bot/categories.py`: category keys are now canonical, language-independent (`"food"`, `"transport"`, `"bills"`, `"health"`, `"entertainment"`, `"shopping"`, `"uncategorized"` — renamed from `"Housing"` to `"bills"` to match the spec's `CATEGORY_DISPLAY`), with a new `CATEGORY_DISPLAY` mapping and `get_category_display(key, lang)` helper. `CATEGORY_KEYWORDS` now mixes English and Turkish keywords per category (matching is language-independent — Turkish words are detected even if the chat's display language is English, and vice versa).
+- `bot/parser.py`: `#tag` category override now lowercases to a canonical key instead of `.capitalize()`-ing to a display string.
+- `bot/db.py`: added `user_settings` table (`chat_id` PK, `language`) plus `has_language_preference`, `get_user_language` (defaults to `"en"`), `set_user_language` (upsert).
+- `bot/handlers.py`: every reply now goes through `t()` using the chat's stored language; added `/language` and `/dil` (alias) showing an inline English/Türkçe keyboard, and a `language_selected` callback handler that persists the choice and replies with a confirmation in the just-selected language. `/start` on a brand-new chat_id shows the language picker first, then the translated welcome text right after a first-time selection. `restricted` decorator now also handles callback queries and replies with a translated "not allowed" message.
+- `bot/main.py`: registered `CommandHandler(["language", "dil"], ...)` and a `CallbackQueryHandler` for the `lang:en` / `lang:tr` callback data.
+- Updated `tests/test_parser.py` for lowercase canonical category keys (`"Food"` → `"food"`, `"Housing"` → `"bills"`, etc.) and added two tests for Turkish keyword detection (`kahve` → `food`, `taksi` → `transport`).
+- Added `tests/test_i18n.py`: `t()` en/tr lookups, fallback-to-English, fallback-to-key, and `get_user_language`/`set_user_language`/`has_language_preference` round-trips against a temp SQLite DB. All 25 tests pass (15 parser + 8 i18n, up from 15).
+
+Known follow-up (not done, needs your go-ahead since it touches live data): the 3 expenses already in `data/expenses.db` were logged before this change and have old-style capitalized categories (`"Food"`, `"Transport"`) rather than the new canonical lowercase keys — they still display correctly in English but won't translate to Turkish. A one-time migration (lowercase existing `category` values) would fix this; not run yet.
+
 ## 2026-08-22 (3) — Claude Code
 
 Personalized the `/start` welcome message; confirmed multi-user (family) support needs no code changes.

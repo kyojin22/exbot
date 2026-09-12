@@ -220,8 +220,10 @@ No manual deployment steps needed once this is set up.
 
 - [x] Repo initialized
 - [x] MVP parsing + logging working locally (parser, categories, currencies, db, handlers, main all implemented; unit tests passing)
-- [ ] Bot smoke-tested against a real Telegram token (no BOT_TOKEN available in this session)
-- [ ] GitHub Actions deployment workflow set up
+- [x] Bot smoke-tested against a real Telegram token (getMe/deleteWebhook/getUpdates/sendMessage all confirmed working)
+- [x] English/Turkish multi-language support (`/language`, `/dil`, `bot/i18n.py`, per-chat `user_settings.language`)
+- [ ] One-time migration of the 3 pre-existing expense rows to lowercase canonical category keys (old rows still show fine in English, just won't translate to Turkish until migrated)
+- [ ] GitHub Actions deployment workflow set up (Dockerfile/docker-compose already added in a prior session)
 
 ## 14. Changelog after each prompt
 
