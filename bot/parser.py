@@ -60,7 +60,9 @@ def parse_expense(text: str, now: datetime | None = None) -> ParsedExpense | Non
     expense_date, category_tag, remaining = _extract_trailing_date_and_tag(remaining, now)
 
     note = " ".join(remaining).strip()
-    category = category_tag.capitalize() if category_tag else detect_category(note)
+    # category is a canonical, language-independent key (e.g. "food") — see
+    # bot/categories.py. Display translation happens at render time, not here.
+    category = category_tag.lower() if category_tag else detect_category(note)
 
     return ParsedExpense(
         amount=amount,

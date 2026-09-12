@@ -29,6 +29,15 @@ CREATE INDEX IF NOT EXISTS idx_expenses_chat_created
     ON expenses (chat_id, created_at);
 """
 
+_USER_SETTINGS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS user_settings (
+    chat_id  INTEGER PRIMARY KEY,
+    language TEXT NOT NULL DEFAULT 'en'
+);
+"""
+
+DEFAULT_LANGUAGE = "en"
+
 
 @dataclass
 class Expense:
@@ -54,6 +63,7 @@ def init_db(db_path: str) -> None:
     try:
         conn.execute(_SCHEMA)
         conn.execute(_INDEX)
+        conn.execute(_USER_SETTINGS_SCHEMA)
         conn.commit()
     finally:
         conn.close()
@@ -123,4 +133,32 @@ def get_last_expense(conn: sqlite3.Connection, *, chat_id: int) -> Expense | Non
 
 def delete_expense(conn: sqlite3.Connection, *, expense_id: int) -> None:
     conn.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+    conn.commit()
+
+
+def has_language_preference(conn: sqlite3.Connection, chat_id: int) -> bool:
+    """True if `chat_id` has ever explicitly set a language (vs. just getting
+    the default). Used to decide whether to show the language picker
+    automatically on a brand-new chat's first /start."""
+    row = conn.execute("SELECT 1 FROM user_settings WHERE chat_id = ?", (chat_id,)).fetchone()
+    return row is not None
+
+
+def get_user_language(conn: sqlite3.Connection, chat_id: int) -> str:
+    """Return the chat's chosen language ("en"/"tr"), defaulting to "en" if unset."""
+    row = conn.execute(
+        "SELECT language FROM user_settings WHERE chat_id = ?", (chat_id,)
+    ).fetchone()
+    return row["language"] if row else DEFAULT_LANGUAGE
+
+
+def set_user_language(conn: sqlite3.Connection, chat_id: int, language: str) -> None:
+    """Upsert the chat's chosen language."""
+    conn.execute(
+        """
+        INSERT INTO user_settings (chat_id, language) VALUES (?, ?)
+        ON CONFLICT(chat_id) DO UPDATE SET language = excluded.language
+        """,
+        (chat_id, language),
+    )
     conn.commit()

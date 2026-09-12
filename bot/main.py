@@ -6,7 +6,13 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
 from bot import db, handlers
 
@@ -58,6 +64,8 @@ def main() -> None:
     application.add_handler(CommandHandler("month", handlers.month))
     application.add_handler(CommandHandler("undo", handlers.undo))
     application.add_handler(CommandHandler("export", handlers.export))
+    application.add_handler(CommandHandler(["language", "dil"], handlers.language_command))
+    application.add_handler(CallbackQueryHandler(handlers.language_selected, pattern=r"^lang:"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handlers.log_expense))
 
     logger.info("Starting bot (db_path=%s)", db_path)
